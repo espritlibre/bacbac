@@ -84,6 +84,18 @@ synchro () {
 
 ## Script
 echo "--- Lancement Backup ---"
+# Creation de jour si il nexiste pas lors de la premiere sauvegarde
+echo "-- Initialisation --"
+	if [ ! -d $RACINE\jour ]; then
+		mkdir $RACINE\jour
+	fi	
+# Rotation des logs
+echo "-- Rotation des logs --"
+	if [ ! -f /tmp/bacbac_rotation_$DATE ]; then
+		echo " --- Rotation des dossiers --- "
+		$CP -al $RACINE\jour $RACINE$DATE2
+		echo 1 > /tmp/bacbac_rotation_$DATE
+	fi
 # Traitement du fichier de configuration ligne par ligne
 while read ligne
 	do
@@ -118,19 +130,8 @@ while read ligne
 				PSSH=$XDECOUPE			    	
 				echo $PSSH
 				### Lancement du backup
-				# Creation de jour si il nexiste pas lors de la premiere sauvegarde
-				if [ ! -d $RACINE\jour ]; then
-				 	mkdir $RACINE\jour	
-					echo " --- Synchronisation du repertoire jour --- "
-					synchro $NOMMACHINE $REPSRC $REPDST $PSSH
-					# On test ensuite si l'on doit faire une rotation ou pas 
-				elif [ ! -f /tmp/bacbac_rotation_$DATE ]; then
-					echo " --- Rotation des dossiers --- "
-					$CP -al $RACINE\jour $RACINE$DATE2
-					echo 1 > /tmp/bacbac_rotation_$DATE
-					echo " --- Synchronisation du repertoire jour --- "
-					synchro $NOMMACHINE $REPSRC $REPDST $PSSH
-				fi
+				echo "Synchro de $NOMMACHINE - $REPSRC"
+				synchro $NOMMACHINE $REPSRC $REPDST $PSSH
 				;;      
         esac    
     done < $CONF 
