@@ -3,10 +3,14 @@
 
 ## Variables
 CP=/bin/cp
+MKDIR=/bin/mkdir
 RSYNC=/usr/bin/rsync
 CUT=/bin/cut
 CONF=bacbac.conf
 RACINE=/home/backup/
+DATE=$(date +%d%m%Y)
+DATE2=$(date +%d%m%Y --date='2 days ago')
+
 
 ## Fonctions
 # Decoupage des lignes de la conf
@@ -62,7 +66,20 @@ ch_lodi() {
 		echo "La valeur de le champs lodi est mauvaise pour la ligne : $ligne"
 		exit 1 
 	fi
+	LODI=$1
+}
 
+synchro () {
+	# Création des repertoires intermediaires si besoin
+	if [ ! -d $RACINE\jour/$1/$2 ];then
+		$MKDIR -p $RACINE\jour/$1/$2
+	fi
+	if [ $LODI = "l" ];then
+		$RSYNC -avz $2 $RACINE\jour/$1/$2
+	else
+		$RSYNC -avz -e "ssh -p $4" $2 $RACINE\jour/$1/$2
+		
+	fi
 }
 
 ## Script
@@ -101,9 +118,20 @@ while read ligne
 				PSSH=$XDECOUPE			    	
 				echo $PSSH
 				### Lancement du backup
-				# Creation de jour si il n'existe pas lors de la premiere sauvegarde
-				if [ 
-                ;;      
+				# Creation de jour si il nexiste pas lors de la premiere sauvegarde
+				if [ ! -d $RACINE\jour ]; then
+				 	mkdir $RACINE\jour	
+				fi
+				### !!Il faut mettre ici un test pour ne pas faire la rotation pour rien.... a voir comment je vais gere cela.
+				# Rotation de jour en jour-1 si celle-ci n'a pas deja été faites
+				echo " --- Rotation des dossiers --- "
+				if [ ! -f /tmp/bacbac_rotation_$DATE ]; then
+					$CP -al $RACINE\jour $RACINE$DATE2
+					echo 1 > /tmp/bacbac_rotation
+				fi
+				# Lancement du backups .....
+				echo " --- Synchronisation du repertoire jour --- "
+				synchro $NOMMACHINE $REPSRC $REPDST $PSSH
+				;;      
         esac    
     done < $CONF 
- 
