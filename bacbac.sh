@@ -121,17 +121,16 @@ while read ligne
 				# Creation de jour si il nexiste pas lors de la premiere sauvegarde
 				if [ ! -d $RACINE\jour ]; then
 				 	mkdir $RACINE\jour	
-				fi
-				### !!Il faut mettre ici un test pour ne pas faire la rotation pour rien.... a voir comment je vais gere cela.
-				# Rotation de jour en jour-1 si celle-ci n'a pas deja été faites
-				echo " --- Rotation des dossiers --- "
-				if [ ! -f /tmp/bacbac_rotation_$DATE ]; then
+					echo " --- Synchronisation du repertoire jour --- "
+					synchro $NOMMACHINE $REPSRC $REPDST $PSSH
+					# On test ensuite si l'on doit faire une rotation ou pas 
+				elif [ ! -f /tmp/bacbac_rotation_$DATE ]; then
+					echo " --- Rotation des dossiers --- "
 					$CP -al $RACINE\jour $RACINE$DATE2
-					echo 1 > /tmp/bacbac_rotation
+					echo 1 > /tmp/bacbac_rotation_$DATE
+					echo " --- Synchronisation du repertoire jour --- "
+					synchro $NOMMACHINE $REPSRC $REPDST $PSSH
 				fi
-				# Lancement du backups .....
-				echo " --- Synchronisation du repertoire jour --- "
-				synchro $NOMMACHINE $REPSRC $REPDST $PSSH
 				;;      
         esac    
     done < $CONF 
