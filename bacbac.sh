@@ -7,12 +7,14 @@ RACINE=/home/backup/
 CONF=bacbac.conf
 LOG=bacbac.log
 LOGF=bacbac_full.log
+AMAIL=kaulian
 # Variables exec
 CP=/bin/cp
 MKDIR=/bin/mkdir
 RSYNC=/usr/bin/rsync
 CUT=/bin/cut
 RM=/bin/rm
+MAIL=/usr/bin/mail
 DATE=$(date +%d%m%Y)
 DATE1=$(date +%d%m%Y --date='1 days ago')
 DATES=$(date +%d%m%Y --date='10 days ago')
@@ -92,6 +94,7 @@ synchro () {
 					echo "$1 :OK" >>$LOG
 				else
 					echo "$1 : ECHEC">>$LOG
+					echo "1" > /tmp/bacbac_echec
 				fi
 	else
 		$RSYNC -az -e "ssh -p $4" $2 $RACINE\jour/$1/$2 2>>$LOG
@@ -100,6 +103,7 @@ synchro () {
 					echo "$1 :OK" >>$LOG
 				else
 					echo "$1 : ECHEC">>$LOG
+					echo "1" > /tmp/bacbac_echec
 				fi
 		
 	fi
@@ -114,6 +118,16 @@ suppression () {
 
 	fi	
 
+}
+
+
+envoi_mail () {
+	 # Envoi du rapport court si OK sinon du FULL
+		if [ -f /tmp/bacbac_echec ]; then
+			$MAIL -s "Sauvegarde du $DATE ! Echec !" $AMAIL < $LOGF
+		else
+			$MAIL -s "Sauvegarde du $DATE" $AMAIL < $LOG
+		fi
 }
 
 ## Script
@@ -150,19 +164,15 @@ while read ligne
 				# Gestion du nom de la machine
 				decoup $ligne 4
 				NOMMACHINE=$XDECOUPE			    	
-				echo $NOMMACHINE
 				# Gestion du repertoire a sauvegarder 
 				decoup $ligne 5
 				REPSRC=$XDECOUPE			    	
-				echo $REPSRC
 				# Gestion du repertoire de backup
 				decoup $ligne 6 
 				REPDST=$XDECOUPE			    	
-				echo $REPDST
 				# Gestion du port SSH
 				decoup $ligne 7
 				PSSH=$XDECOUPE			    	
-				echo $PSSH
 				### Lancement du backup
 				echo "Synchro de $NOMMACHINE - $REPSRC"
 				echo "--- $NOMMACHINE ---" >> $LOGF
@@ -172,3 +182,5 @@ while read ligne
     done < $CONF 
 # Suppression de la plus vieille sauvegarde
 suppression
+# Envoi du mail
+envoi_mail
