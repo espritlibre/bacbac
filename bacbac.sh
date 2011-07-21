@@ -4,13 +4,15 @@
 ## Variables
 DATES=$(date +%d%m%Y --date='10 days ago')
 RACINE=/home/backup/
+CONF=bacbac.conf
+LOG=bacbac.log
+LOGF=bacbac_full.log
 # Variables exec
 CP=/bin/cp
 MKDIR=/bin/mkdir
 RSYNC=/usr/bin/rsync
 CUT=/bin/cut
 RM=/bin/rm
-CONF=bacbac.conf
 DATE=$(date +%d%m%Y)
 DATE1=$(date +%d%m%Y --date='1 days ago')
 DATES=$(date +%d%m%Y --date='10 days ago')
@@ -84,9 +86,21 @@ synchro () {
 		$MKDIR -p $RACINE\jour/$1/$2
 	fi
 	if [ $LODI = "l" ];then
-		$RSYNC -avz $2 $RACINE\jour/$1/$2
+		$RSYNC -az $2 $RACINE\jour/$1/$2 2>>$LOGF
+		RETVAL=$?
+				if [ $RETVAL = 0 ];then
+					echo "$1 :OK" >>$LOG
+				else
+					echo "$1 : ECHEC">>$LOG
+				fi
 	else
-		$RSYNC -avz -e "ssh -p $4" $2 $RACINE\jour/$1/$2
+		$RSYNC -az -e "ssh -p $4" $2 $RACINE\jour/$1/$2 2>>$LOG
+		RETVAL=$?
+				if [ $RETVAL = 0 ];then
+					echo "$1 :OK" >>$LOG
+				else
+					echo "$1 : ECHEC">>$LOG
+				fi
 		
 	fi
 }
@@ -95,12 +109,17 @@ suppression () {
 	# Suppression de la plus vieille sauvegarde
 	if [ -d $RACINE$DATES ]; then
 		$RM -rf $RACINE$DATES
+	else
+		echo "--- Rien a supprimer ---"
+
 	fi	
 
 }
 
 ## Script
 echo "--- Lancement Backup ---"
+echo $DATE > $LOG
+echo $DATE > $LOGF
 # Creation de jour si il nexiste pas lors de la premiere sauvegarde
 echo "-- Initialisation --"
 initialisation
@@ -146,6 +165,7 @@ while read ligne
 				echo $PSSH
 				### Lancement du backup
 				echo "Synchro de $NOMMACHINE - $REPSRC"
+				echo "--- $NOMMACHINE ---" >> $LOGF
 				synchro $NOMMACHINE $REPSRC $REPDST $PSSH
 				;;      
         esac    
