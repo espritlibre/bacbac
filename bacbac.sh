@@ -2,15 +2,18 @@
 # v0.1 - Script de sauvegarde incremental
 
 ## Variables
+DATES=$(date +%d%m%Y --date='10 days ago')
+RACINE=/home/backup/
+# Variables exec
 CP=/bin/cp
 MKDIR=/bin/mkdir
 RSYNC=/usr/bin/rsync
 CUT=/bin/cut
+RM=/bin/rm
 CONF=bacbac.conf
-RACINE=/home/backup/
 DATE=$(date +%d%m%Y)
 DATE2=$(date +%d%m%Y --date='2 days ago')
-
+DATES=$(date +%d%m%Y --date='10 days ago')
 
 ## Fonctions
 # Decoupage des lignes de la conf
@@ -82,12 +85,18 @@ synchro () {
 	fi
 }
 
+suppression () {
+	# Suppression de la plus vieille sauvegarde
+		$RM -rf $RACINE$DATES
+
+}
+
 ## Script
 echo "--- Lancement Backup ---"
 # Creation de jour si il nexiste pas lors de la premiere sauvegarde
 echo "-- Initialisation --"
 	if [ ! -d $RACINE\jour ]; then
-		mkdir $RACINE\jour
+		$MKDIR $RACINE\jour
 	fi	
 # Rotation des logs
 echo "-- Rotation des logs --"
@@ -135,3 +144,5 @@ while read ligne
 				;;      
         esac    
     done < $CONF 
+# Suppression de la plus vieille sauvegarde
+suppression
