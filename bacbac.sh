@@ -12,7 +12,7 @@ CUT=/bin/cut
 RM=/bin/rm
 CONF=bacbac.conf
 DATE=$(date +%d%m%Y)
-DATE2=$(date +%d%m%Y --date='2 days ago')
+DATE1=$(date +%d%m%Y --date='1 days ago')
 DATES=$(date +%d%m%Y --date='10 days ago')
 
 ## Fonctions
@@ -72,6 +72,12 @@ ch_lodi() {
 	LODI=$1
 }
 
+initialisation () {
+	if [ ! -d $RACINE\jour ]; then
+		$MKDIR $RACINE\jour
+	fi	
+}
+
 synchro () {
 	# Création des repertoires intermediaires si besoin
 	if [ ! -d $RACINE\jour/$1/$2 ];then
@@ -87,7 +93,9 @@ synchro () {
 
 suppression () {
 	# Suppression de la plus vieille sauvegarde
+	if [ -d $RACINE$DATES ]; then
 		$RM -rf $RACINE$DATES
+	fi	
 
 }
 
@@ -95,14 +103,12 @@ suppression () {
 echo "--- Lancement Backup ---"
 # Creation de jour si il nexiste pas lors de la premiere sauvegarde
 echo "-- Initialisation --"
-	if [ ! -d $RACINE\jour ]; then
-		$MKDIR $RACINE\jour
-	fi	
+initialisation
 # Rotation des logs
 echo "-- Rotation des logs --"
 	if [ ! -f /tmp/bacbac_rotation_$DATE ]; then
 		echo " --- Rotation des dossiers --- "
-		$CP -al $RACINE\jour $RACINE$DATE2
+		$CP -al $RACINE\jour $RACINE$DATE1
 		echo 1 > /tmp/bacbac_rotation_$DATE
 	fi
 # Traitement du fichier de configuration ligne par ligne
